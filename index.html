@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+
+<head>
+    <meta http-Equiv="Cache-Control" Content="no-cache" />
+    <meta http-Equiv="Pragma" Content="no-cache" />
+    <meta http-Equiv="Expires" Content="0" />
+
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+
+    <style>
+        html, body
+        {
+            width : 100%;
+            height : 100%;
+            margin : 0px;
+            padding : 0px;
+        }
+
+        canvas
+        {
+            display : block;
+
+            position: absolute;
+        }
+    </style>
+
+    <script type="text/javascript" src="jsmodeler/three.min.js"></script>
+    <script type="text/javascript" src="jsmodeler/jsmodeler.js"></script>
+    <script type="text/javascript" src="jsmodeler/jsmodeler.ext.three.js"></script>
+    <script type="text/javascript">
+        function OnResize ()
+        {
+            var canvass = document.getElementsByClassName ('fullscreen');
+            for (var canvas of canvass) {
+                if (!canvas) continue;
+                canvas.width = document.body.clientWidth;
+                canvas.height = document.body.clientHeight;
+            }
+        }
+        function OnLoad ()
+        {
+            OnResize ();
+            LoadOnline3DModels ();
+        }
+
+        window.addEventListener ('load', OnLoad, true);
+        window.addEventListener ('resize', OnResize, true);
+
+        LoadOnline3DModels = function ()
+        {
+            function Error (viewerElement, message)
+            {
+                var context = viewerElement.getContext ('2d');
+                context.font = '12px Arial';
+                context.fillText (message, 0, 12);
+            }
+
+            function LoadViewer (viewerElement)
+            {
+                var urls = viewerElement.getAttribute ('sourcefiles');
+                if (urls === undefined || urls === null) {
+                    Error (viewerElement, 'Invalid source files.');
+                    return;
+                }
+
+                var urlLists = urls.split ('|');
+
+                // SETUP
+                var viewerSettings = {
+                    cameraEyePosition: [0.5, 0.0, 100.0],
+                    cameraCenterPosition: [0.0, 0.0, 0.0],
+                    cameraUpVector: [0.0, 0.0, 1.0]
+                };
+
+                var viewer = new JSM.ThreeViewer();
+                if (!viewer.Start(viewerElement, viewerSettings)) {
+                    Error(viewerElement, 'Internal error.');
+                    return;
+                }
+
+                for (var urlList of urlLists) {
+                    urlList = urlList.split(",");
+                    console.log(urlList);
+                    JSM.ConvertURLListToJsonData(urlList, {
+                        onError: function () {
+                            Error(viewerElement, 'Conversion failed.');
+                            return;
+                        },
+                        onReady: function (fileNames, jsonData) {
+                            var currentMeshIndex = 0;
+                            console.log("Draw", fileNames);
+                            var environment = {
+                                onStart: function (/*taskCount, meshes*/) {
+                                    viewer.EnableDraw(false);
+                                },
+                                onProgress: function (currentTask, meshes) {
+                                    while (currentMeshIndex < meshes.length) {
+                                        viewer.AddMesh(meshes[currentMeshIndex]);
+                                        currentMeshIndex = currentMeshIndex + 1;
+                                    }
+                                },
+                                onFinish: function (meshes) {
+                                    if (meshes.length > 0) {
+                                        viewer.AdjustClippingPlanes(50.0);
+                                        viewer.FitInWindow();
+                                    }
+                                    viewer.EnableDraw(true);
+                                    viewer.Draw();
+                                }
+                            };
+
+                            var textureLoaded = function () {
+                                viewer.Draw();
+                            };
+                            JSM.ConvertJSONDataToThreeMeshes(jsonData, textureLoaded, environment);
+                        }
+                    });
+                }
+            }
+
+            var supported = JSM.IsWebGLEnabled () && JSM.IsFileApiEnabled ();
+            var viewers = document.getElementsByClassName ('3dviewer');
+            var i, viewer;
+            for (i = 0; i < viewers.length; i++) {
+                viewer = viewers[i];
+                if (supported) {
+                    LoadViewer (viewer);
+                } else {
+                    Error (viewer, 'No browser support.');
+                }
+            }
+        };
+
+    </script>
+    <title>3DPlan Viewer</title>
+
+</head>
+
+<body>
+    <main id="main">
+        <!--<canvas class="3dviewer fullscreen" sourcefiles="../data/realty3d/724/72488/7248864/1514442_w0.png|../data/realty3d/724/72488/7248864/1514442_w3.png|../data/realty3d/724/72488/7248864/1514442.mtl|../data/realty3d/724/72488/7248864/1514442_f0.png|../data/realty3d/724/72488/7248864/1514442.obj|../data/realty3d/724/72488/7248864/1514442_w1.png|../data/realty3d/724/72488/7248864/1514442_w2.png|../data/realty3d/724/72488/7248864/1514440_w2.png|../data/realty3d/724/72488/7248864/1514440.mtl|../data/realty3d/724/72488/7248864/1514440_w0.png|../data/realty3d/724/72488/7248864/1514440.obj|../data/realty3d/724/72488/7248864/1514440_w1.png|../data/realty3d/724/72488/7248864/1514440_f0.png|../data/realty3d/724/72488/7248864/1514440_w3.png|../data/realty3d/724/72488/7248864/1514441_w2.png|../data/realty3d/724/72488/7248864/1514441_w1.png|../data/realty3d/724/72488/7248864/1514441_w0.png|../data/realty3d/724/72488/7248864/1514441_f0.png|../data/realty3d/724/72488/7248864/1514441.obj|../data/realty3d/724/72488/7248864/1514441.mtl|../data/realty3d/724/72488/7248864/1514441_w3.png|../data/realty3d/724/72488/7248864/1514443.mtl|../data/realty3d/724/72488/7248864/1514443_w0.png|../data/realty3d/724/72488/7248864/1514443_w2.png|../data/realty3d/724/72488/7248864/1514443_f0.png|../data/realty3d/724/72488/7248864/1514443.obj|../data/realty3d/724/72488/7248864/1514443_w3.png|../data/realty3d/724/72488/7248864/1514443_w1.png" width="200" height="200"></canvas>
+        -->
+    </main>
+    <script>
+        main.innerHTML += '<canvas class=\"fullscreen 3dviewer\" sourcefiles=\"' +  window.location.hash.slice(1) + '\" width=\"200\" height=\"200\"></canvas>';
+    </script>
+</body>
+
+</html>
